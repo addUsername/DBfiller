@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dbfiller;
 
 import java.sql.Connection;
@@ -49,6 +44,7 @@ public class DBfiller {
         
         try{
             //connect(driver,hostname,user,pass);
+            //solo query y query2 son realmente necesarias, porque query es la unica activa 'casi'constemente
             Connection conexion = connect();            
             query = conexion.createStatement();
             query2 = conexion.createStatement();
@@ -150,8 +146,7 @@ public class DBfiller {
             }
         return numCol;
 }
-    private static void insertRow(String row, Tabla tabla){
-        
+    private static void insertRow(String row, Tabla tabla){        
         
         try {
             
@@ -180,7 +175,7 @@ public class DBfiller {
         } catch (SQLException ex) {
             Logger.getLogger(DBfiller.class.getName()).log(Level.SEVERE, null, ex);
         }
-//como coño evito estooo, asi:
+        
         String [] toReturn = new String[keysPK.size()];
         int i=0;
         for (Object key:keysPK.toArray()){
