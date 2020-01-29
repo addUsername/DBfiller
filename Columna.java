@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dbfiller;
 
 import java.util.Random;
@@ -28,11 +23,9 @@ public class Columna {
         this.autoIncr = autoIncr;
         this.tablaName = tablaName;
     }
-    public String inventCol(){
-        
+    public String inventCol(){        
         //deberia este metodo recibir un ejemplo?
-        //select
-        
+        //select        
         System.out.println("Creando campo: "+this.nombreCol);
         //aqui es donde ira la logica del programa
         
@@ -46,8 +39,7 @@ public class Columna {
             herency [1] = herency[1].substring(0,herency[1].length() - 2);
             String[] choices = DBfiller.getConstraintWords(herency[1].split("\\."));
             return choices[r.nextInt(choices.length)]+",";           
-        }
-        
+        }        
         //implementar find en un futuro..
         int value = 1;
         if (this.type.matches("varchar.*$")){
@@ -68,8 +60,7 @@ public class Columna {
             System.out.println("-IMPLEMENTAR random DATE");
         }else{
                 System.out.println("no rula con este ");
-                toReturn += "null";
-            
+                toReturn += "null";            
         }
         if(this.clave==3){
             System.out.println(toReturn.substring(0,toReturn.length()-1));//quitamos parentesis
