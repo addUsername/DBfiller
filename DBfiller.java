@@ -21,36 +21,34 @@ public class DBfiller {
     public static Statement query;
     public static Statement query2,query3,query4,query5;
     public static Tabla[] allTables;
+    public static String nombreDB="";
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         // TODO code application logic here
         Scanner input = new Scanner(System.in);
-        if(false){
-            
-            System.out.println("Introduzca el SGBD, ex mySQL");
-            String driver = input.nextLine();
-            System.out.println("Introduzca el hostName/datebaseName, ex DESKTOP-SKFLI33/mydb");
-            String hostname = input.nextLine();
-            System.out.println("Introduzca el user");
-            String user = input.nextLine();
-            System.out.println("Introduzca el pass");
-            String pass = input.nextLine();
-            
-            
-        }
         
+            
+        System.out.println("Introduzca el SGBD, compatible con mySQL, postgreSql y Oracle");
+        String driver = input.nextLine();
+        System.out.println("Introduzca el hostName/datebaseName, ex 127.0.0.1/mydb");
+        String hostname = input.nextLine();
+        String str[]=hostname.split("/");
+        nombreDB=str[1];
+        System.out.println("Introduzca el user");
+        String user = input.nextLine();
+        System.out.println("Introduzca el pass");
+        String pass = input.nextLine();          
+            
+                
         
         try{
             //connect(driver,hostname,user,pass);
-            //solo query y query2 son realmente necesarias, porque query es la unica activa 'casi'constemente
-            Connection conexion = connect();            
+            //solo es necesario una query extra
+            Connection conexion = connect(driver,hostname,user,pass);            
             query = conexion.createStatement();
             query2 = conexion.createStatement();
-            query3 = conexion.createStatement();
-            query4 = conexion.createStatement();
-            query5 = conexion.createStatement();
             
             ResultSet rs = query.executeQuery("SHOW TABLES");
             ResultSetMetaData metaData=rs.getMetaData();
@@ -72,11 +70,27 @@ public class DBfiller {
         }
         //insertRow(allTables[0].inventRow(),allTables[0]);
     }
-    public static Connection connect() throws ClassNotFoundException, SQLException{//(String driver,String hostname,String user,String pass){
+    public static Connection connect(String driver,String hostname,String user,String pass) throws ClassNotFoundException, SQLException{//{
         System.out.println("Cargando driver..");
-        Class.forName("com.mysql.jdbc.Driver");
+        String sgbd, conexionStr="";
+        switch (driver.toLowerCase()) {
+            case "postgresql":
+                sgbd="org.postgresql.jdbc.Driver";
+                conexionStr = "";
+                break;
+            case "oracle":
+                sgbd="oracle.jdbc.driver.OracleDriver";
+                break;
+            default:
+                sgbd="com.mysql.jdbc.Driver";
+                conexionStr = "jdbc:mysql://"+hostname;
+                break;
+        }
+        
+        Class.forName(sgbd);  //"jdbc:mysql://DESKTOP-SKFLI33/leer"
         System.out.println("Estableciendo conexion..");
-        Connection conexion = DriverManager.getConnection("jdbc:mysql://DESKTOP-SKFLI33/leer", "jdbc", "jdbc");
+        Connection conexion = DriverManager.getConnection(conexionStr, user, pass);
+        if(conexion!=null)System.out.println("Conectado con exito");
         return conexion;
     }
     public static void describeTables(Object[] tablas) throws SQLException{
@@ -100,14 +114,14 @@ public class DBfiller {
                 }else if(rs.getString(4).equals("MUL")){
                    //esta query nos devolvera las relaciones que tiene FK de esta tabla y la siguiente
                    //pasara un array con los valores posibles para esa FK
-                   ResultSet rs3 = query3.executeQuery("select "
+                   ResultSet rs3 = query2.executeQuery("select "
                             + "concat(table_name, '.', column_name) as 'foreign key',"
                            + "concat(referenced_table_name, '.', referenced_column_name) as 'references' "
                           + "from "
                           + "information_schema.key_column_usage "
                           + "where "
                            + "referenced_table_name is not null "
-                            + "and table_schema = 'leer'");
+                            + "and table_schema = '"+nombreDB+"'");
                     while (rs3.next()){
                         //almacenamos la info tabla(columna) con la que se relaciona esta columan
                         if (rs3.getString(1).matches("^.*"+nombreCol))type += " "+rs3.getString(2)+"FK";
@@ -119,16 +133,13 @@ public class DBfiller {
                 }
                 Boolean autoIncr = (rs.getString(6).equals("auto_increment"))? true : false;
                 
-                allTables[i].add(new Columna(nombreCol,type,nul,clave,autoIncr,tablas[i].toString()));
-                
+                allTables[i].add(new Columna(nombreCol,type,nul,clave,autoIncr,tablas[i].toString()));                
             }
         }
         
         for(Tabla tabla:allTables){
             if(tabla != null) System.out.println(tabla.toString()+"\n");
         }
-        /*
-        */
     }
     private static int getNumColumns (String nameColumn){
         int numCol=1;
@@ -137,7 +148,7 @@ public class DBfiller {
         try {
             nc = query2.executeQuery("SELECT count(*) " +
                     "FROM information_schema.columns " +
-                    "WHERE table_schema = 'leer' " +
+                    "WHERE table_schema = '"+nombreDB+"' " +
                     "AND table_name = '"+nameColumn+"'");
             numCol = 1;
             if(nc.next()) numCol = nc.getInt(1);                
@@ -151,7 +162,7 @@ public class DBfiller {
         try {
             
             System.out.println(" VALUES "+row+";");
-            query4.executeUpdate("INSERT INTO "+tabla.name+" "+tabla.columnsNotAutoIncrement()+
+            query2.executeUpdate("INSERT INTO "+tabla.name+" "+tabla.columnsNotAutoIncrement()+
                     " VALUES "+row+";");
                     
         } catch (SQLException ex) {
@@ -167,7 +178,7 @@ public class DBfiller {
         
         try {
             //ResultSet rs5 = query5.executeQuery("SELECT "+herency[1].substring(0,herency[1].length() -1)+" FROM "+herency[0]);
-            ResultSet rs5 = query5.executeQuery("SELECT "+herency[1]+" FROM "+herency[0]);
+            ResultSet rs5 = query2.executeQuery("SELECT "+herency[1]+" FROM "+herency[0]);
             
             while(rs5.next()){
                 keysPK.add(rs5.getString(1));
@@ -175,7 +186,7 @@ public class DBfiller {
         } catch (SQLException ex) {
             Logger.getLogger(DBfiller.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+//como coño evito estooo, asi:
         String [] toReturn = new String[keysPK.size()];
         int i=0;
         for (Object key:keysPK.toArray()){
