@@ -73,6 +73,7 @@ public class DBfiller {
     public static Connection connect(String driver,String hostname,String user,String pass) throws ClassNotFoundException, SQLException{//{
         System.out.println("Cargando driver..");
         String sgbd, conexionStr="";
+        //Fix these
         switch (driver.toLowerCase()) {
             case "postgresql":
                 sgbd="org.postgresql.jdbc.Driver";
